@@ -1,5 +1,6 @@
 import os, sys
 import pytest
+
 from fastapi import status, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from unittest.mock import MagicMock
@@ -49,7 +50,7 @@ def test_create_task_success(mock_db_session):
     assert isinstance(result, Task)
     assert result.title == "Tarefa de Teste"
     assert result.description == "Descrição com espaços"
-    assert result.id == 1  # Agora deve passar
+    assert result.id == 1
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
     mock_db_session.refresh.assert_called_once()
