@@ -354,7 +354,7 @@ O servidor estará disponível em `http://127.0.0.1:8000`. A opção `--reload` 
     ```
 
 ### 6. Testes
-Na Raiz do projeto tode o comando 
+Na Raiz do projeto rode o comando 
 ```bash
 pytest tests/test_tasks.py -v --cov=app --cov-report=term-missing  
 ```
