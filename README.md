@@ -63,12 +63,12 @@ Abra seu terminal e execute o seguinte comando. Ele fará o download da imagem o
 
 ```bash
 docker run --rm --name postgres-container \
-  -e POSTGRES_USER=user \
-  -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_DB=dbname \
-  -p 5432:5432 \
-  -v pg_data:/var/lib/postgresql/data \
-  postgres:16
+-e POSTGRES_USER=user \
+-e POSTGRES_PASSWORD=password \
+-e POSTGRES_DB=dbname \
+-p 5432:5432 \
+-v pg_data:/var/lib/postgresql/data \
+postgres:16
 ```
 
 **2. Entendendo o Comando**
@@ -91,7 +91,7 @@ Após executar o comando acima, seu banco de dados estará acessível. Certifiqu
 
 ```ini
 # .env
-DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${POSTGRES_DB}"
 API_TOKEN="mysecrettoken"
 ```
 
@@ -133,7 +133,7 @@ POSTGRES_PASSWORD=password
 POSTGRES_DB=dbname
 
 # Configuração da API
-DATABASE_URL=postgresql://user:password@db:5432/dbname
+DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${POSTGRES_DB}"
 API_TOKEN=mysecrettoken
 ```
 
@@ -217,7 +217,7 @@ Agora, edite o arquivo `.env` com as suas credenciais do PostgreSQL e o token de
 
 ```ini
 # .env
-DATABASE_URL="postgresql://seu_usuario:sua_senha@localhost:5432/seu_banco"
+DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${POSTGRES_DB}"
 API_TOKEN="mysecrettoken"
 ```
 
