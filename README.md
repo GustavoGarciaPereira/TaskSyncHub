@@ -178,9 +178,6 @@ Após iniciar os containers, a API estará disponível em:
 - Modificações no código (`./app`) refletem automaticamente no container
 - Para desenvolvimento, use `--build` após fazer alterações no Dockerfile
 
-
-Esta seção deve ser adicionada após a seção "Instalação e Configuração" e antes de "Uso da API (Endpoints)" no seu README.md. Ela fornece uma documentação completa sobre como usar o Docker Compose com seu projeto.
-
 ## Instalação e Configuração
 
 Siga os passos abaixo para configurar e executar o projeto localmente.
