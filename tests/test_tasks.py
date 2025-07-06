@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models import Task
 from app.schemas import TaskCreate
-from app.crud import create_task
+from app.crud import create_task, get_tasks, get_task, update_task, delete_task
 
 @pytest.fixture
 def mock_db_session():
@@ -106,3 +106,156 @@ def test_create_task_unexpected_error(mock_db_session):
     
     assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert "Erro inesperado ao criar tarefa" in str(exc_info.value.detail)
+
+
+
+def test_get_tasks_success(mock_db_session):
+    """Testa a recuperação bem-sucedida de uma lista de tarefas"""
+    # Arrange
+    mock_tasks = [
+        Task(id=1, title="Tarefa 1", description="Desc 1", created_at=datetime.now()),
+        Task(id=2, title="Tarefa 2", description="Desc 2", created_at=datetime.now())
+    ]
+    # Simula a cadeia de chamadas do SQLAlchemy
+    (mock_db_session.query.return_value
+     .order_by.return_value
+     .offset.return_value
+     .limit.return_value
+     .all.return_value) = mock_tasks
+
+    # Act
+    result = get_tasks(db=mock_db_session, skip=0, limit=10)
+
+    # Assert
+    assert len(result) == 2
+    assert result[0].title == "Tarefa 1"
+    assert result[1].id == 2
+    mock_db_session.query.assert_called_once_with(Task)
+    
+    
+def test_get_tasks_with_invalid_limit(mock_db_session):
+    """Testa a falha ao tentar recuperar tarefas com um limite inválido"""
+    # Arrange
+    limit_invalido = -5
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        get_tasks(db=mock_db_session, skip=0, limit=limit_invalido)
+
+    assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert "O parâmetro 'limit' deve estar entre 1 e 1000" in str(exc_info.value.detail)
+    mock_db_session.query.assert_not_called()
+    
+    
+def test_get_task_success(mock_db_session):
+    """Testa a busca bem-sucedida de uma única tarefa pelo ID"""
+    # Arrange
+    mock_task = Task(id=1, title="Tarefa Encontrada", description="Detalhes", created_at=datetime.now())
+    (mock_db_session.query.return_value
+     .filter.return_value
+     .first.return_value) = mock_task
+
+    # Act
+    result = get_task(db=mock_db_session, task_id=1)
+
+    # Assert
+    assert result is not None
+    assert result.id == 1
+    assert result.title == "Tarefa Encontrada"
+    mock_db_session.query.assert_called_once_with(Task)
+    
+def test_get_task_not_found(mock_db_session):
+    """Testa o comportamento quando uma tarefa com o ID especificado não é encontrada"""
+    # Arrange
+    (mock_db_session.query.return_value
+     .filter.return_value
+     .first.return_value) = None
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        get_task(db=mock_db_session, task_id=999)
+
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
+    assert "Tarefa com ID 999 não encontrada" in str(exc_info.value.detail)
+
+
+def test_update_task_success(mock_db_session):
+    """Testa a atualização bem-sucedida de uma tarefa existente"""
+    # Arrange
+    existing_task = Task(id=1, title="Título Antigo", description="Descrição Antiga")
+    update_data = TaskCreate(title="  Título Novo  ", description="Descrição Nova")
+    
+    (mock_db_session.query.return_value
+     .filter.return_value
+     .first.return_value) = existing_task
+
+    # Act
+    result = update_task(db=mock_db_session, task_id=1, task=update_data)
+
+    # Assert
+    assert result is not None
+    assert result.id == 1
+    assert result.title == "Título Novo"  # Verifica se o .strip() funcionou
+    assert result.description == "Descrição Nova"
+    mock_db_session.commit.assert_called_once()
+    mock_db_session.refresh.assert_called_once_with(existing_task)
+    mock_db_session.rollback.assert_not_called()
+    
+    
+def test_update_task_not_found(mock_db_session):
+    """Testa a tentativa de atualizar uma tarefa que não existe"""
+    # Arrange
+    update_data = TaskCreate(title="Título Novo", description="Descrição Nova")
+    (mock_db_session.query.return_value
+     .filter.return_value
+     .first.return_value) = None
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        update_task(db=mock_db_session, task_id=999, task=update_data)
+
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
+    assert "Tarefa com ID 999 não encontrada" in str(exc_info.value.detail)
+    mock_db_session.commit.assert_not_called()
+    mock_db_session.rollback.assert_not_called()
+    
+    
+    
+def test_delete_task_success(mock_db_session):
+    """Testa a exclusão bem-sucedida de uma tarefa"""
+    # Arrange
+    task_to_delete = Task(id=1, title="Tarefa para deletar", description="Adeus")
+    (mock_db_session.query.return_value
+     .filter.return_value
+     .first.return_value) = task_to_delete
+
+    # Act
+    result = delete_task(db=mock_db_session, task_id=1)
+
+    # Assert
+    assert result is not None
+    assert result.id == 1
+    mock_db_session.delete.assert_called_once_with(task_to_delete)
+    mock_db_session.commit.assert_called_once()
+    mock_db_session.rollback.assert_not_called()
+
+
+def test_delete_task_database_error_on_commit(mock_db_session):
+    """Testa o tratamento de erro do DB durante o commit da exclusão"""
+    # Arrange
+    task_to_delete = Task(id=1, title="Tarefa para deletar", description="Adeus")
+    (mock_db_session.query.return_value
+     .filter.return_value
+     .first.return_value) = task_to_delete
+
+    mock_db_session.commit.side_effect = SQLAlchemyError("Erro de integridade referencial")
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        delete_task(db=mock_db_session, task_id=1)
+
+    assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+    assert "Erro ao excluir a tarefa do banco de dados" in str(exc_info.value.detail)
+    mock_db_session.delete.assert_called_once_with(task_to_delete)
+    mock_db_session.commit.assert_called_once()
+    mock_db_session.rollback.assert_called_once()
