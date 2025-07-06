@@ -25,27 +25,21 @@ services:
     build: .
     container_name: fastapi_api
     restart: always
-    ports:
-      - "8000:8000"
+    network_mode: "host"
     volumes:
-      - ./app:/app/app  # Monta o código local para live-reloading
+      - ./app:/app/app
     env_file:
       - .env
-    depends_on:
-      db:
-        condition: service_healthy
 
   tests:
     build: .
     container_name: fastapi_tests
+    network_mode: "host"
     volumes:
       - ./app:/app/app
       - ./tests:/app/tests
     env_file:
       - .env
-    depends_on:
-      db:
-        condition: service_healthy
     command: >
       sh -c "python -m pytest /app/tests -v"
     environment:
