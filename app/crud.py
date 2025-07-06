@@ -3,6 +3,10 @@ from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from . import models, schemas
+import logging
+
+
+logger = logging.getLogger("app")
 
 def create_task(db: Session, task: schemas.TaskCreate) -> models.Task:
     """
@@ -30,22 +34,25 @@ def create_task(db: Session, task: schemas.TaskCreate) -> models.Task:
         db.add(db_task)
         db.commit()
         db.refresh(db_task)
-        
+        logger.info(f"Creating new task {task.title}")
         return db_task
         
     except ValueError as e:
         db.rollback()
+        logger.error("Failed to create task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except SQLAlchemyError as e:
+        logger.error("Failed to create task", exc_info=True)
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao salvar a tarefa no banco de dados: {str(e)}"
         )
     except Exception as e:
+        logger.error("Failed to create task", exc_info=True)
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -81,16 +88,19 @@ def get_tasks(db: Session, skip: int = 0, limit: int = 100) -> List[models.Task]
         return tasks
         
     except ValueError as e:
+        logger.error("Failed to create task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except SQLAlchemyError as e:
+        logger.error("Failed to create task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao acessar o banco de dados: {str(e)}"
         )
     except Exception as e:
+        logger.error("Failed to create task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro inesperado ao recuperar tarefas: {str(e)}"
@@ -130,18 +140,22 @@ def get_task(db: Session, task_id: int) -> models.Task:
         return task
         
     except ValueError as e:
+        logger.error("Failed to get task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except SQLAlchemyError as e:
+        logger.error("Failed to get task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao acessar o banco de dados: {str(e)}"
         )
     except HTTPException:
+        logger.error("Failed to get task", exc_info=True)
         raise
     except Exception as e:
+        logger.error("Failed to get task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro inesperado ao buscar tarefa: {str(e)}"
@@ -191,6 +205,7 @@ def update_task(db: Session, task_id: int, task: schemas.TaskCreate) -> models.T
             db.commit()
             db.refresh(db_task)
         except SQLAlchemyError as e:
+            logger.error("Failed to update task", exc_info=True)
             db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -200,13 +215,16 @@ def update_task(db: Session, task_id: int, task: schemas.TaskCreate) -> models.T
         return db_task
         
     except ValueError as e:
+        logger.error("Failed to update task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except HTTPException:
+        logger.error("Failed to update task", exc_info=True)
         raise
     except Exception as e:
+        logger.error("Failed to update task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro inesperado ao atualizar tarefa: {str(e)}"
@@ -257,13 +275,16 @@ def delete_task(db: Session, task_id: int) -> models.Task:
         return db_task
         
     except ValueError as e:
+        logger.error("Failed to delete task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except HTTPException:
+        logger.error("Failed to delete task", exc_info=True)
         raise
     except Exception as e:
+        logger.error("Failed to delete task", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro inesperado ao excluir tarefa: {str(e)}"
