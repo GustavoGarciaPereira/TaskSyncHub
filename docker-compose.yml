@@ -35,5 +35,22 @@ services:
       db:
         condition: service_healthy
 
+  tests:
+    build: .
+    container_name: fastapi_tests
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python -m pytest /app/tests -v"
+    environment:
+      - PYTHONPATH=/app
+      - TESTING=1
+
 volumes:
   pg_data:

@@ -353,6 +353,63 @@ O servidor estará disponível em `http://127.0.0.1:8000`. A opção `--reload` 
     }
     ```
 
+### 6. Testes
+Na Raiz do projeto tode o comando 
+```bash
+pytest tests/test_tasks.py -v --cov=app --cov-report=term-missing  
+```
+resultado esperado
+```bash
+pytest tests/test_tasks.py -v --cov=app --cov-report=term-missing                                                                                 main  
+========================================================================================== test session starts ==========================================================================================
+platform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.6.0 -- /home/gustavo/TaskSyncHub/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/gustavo/TaskSyncHub
+configfile: pytest.ini
+plugins: cov-6.2.1, anyio-4.9.0
+collected 13 items                                                                                                                                                                                      
+
+tests/test_tasks.py::test_create_task_success PASSED                                                                                                                                              [  7%]
+tests/test_tasks.py::test_create_task_with_empty_title PASSED                                                                                                                                     [ 15%]
+tests/test_tasks.py::test_create_task_with_null_description PASSED                                                                                                                                [ 23%]
+tests/test_tasks.py::test_create_task_database_error PASSED                                                                                                                                       [ 30%]
+tests/test_tasks.py::test_create_task_unexpected_error PASSED                                                                                                                                     [ 38%]
+tests/test_tasks.py::test_get_tasks_success PASSED                                                                                                                                                [ 46%]
+tests/test_tasks.py::test_get_tasks_with_invalid_limit PASSED                                                                                                                                     [ 53%]
+tests/test_tasks.py::test_get_task_success PASSED                                                                                                                                                 [ 61%]
+tests/test_tasks.py::test_get_task_not_found PASSED                                                                                                                                               [ 69%]
+tests/test_tasks.py::test_update_task_success PASSED                                                                                                                                              [ 76%]
+tests/test_tasks.py::test_update_task_not_found PASSED                                                                                                                                            [ 84%]
+tests/test_tasks.py::test_delete_task_success PASSED                                                                                                                                              [ 92%]
+tests/test_tasks.py::test_delete_task_database_error_on_commit PASSED                                                                                                                             [100%]
+
+============================================================================================ tests coverage =============================================================================================
+____________________________________________________________________________ coverage: platform linux, python 3.12.7-final-0 ____________________________________________________________________________
+
+Name                    Stmts   Miss  Cover   Missing
+-----------------------------------------------------
+app/__init__.py             0      0   100%
+app/crud.py               117     33    72%   78, 96-104, 129, 143-144, 149-150, 157-159, 185, 189, 207-210, 218-219, 226-228, 253, 259, 278-279, 286-288
+app/database.py            14      4    71%   19-23
+app/dependencies.py         8      8     0%   1-17
+app/logging_config.py      12     12     0%   1-50
+app/main.py                12     12     0%   1-15
+app/models.py              11      1    91%   14
+app/schemas.py             11      0   100%
+app/services.py             0      0   100%
+-----------------------------------------------------
+TOTAL                     185     70    62%
+========================================================================================== 13 passed in 2.50s ===========================================================================================
+```
+caso esteja queira usar direto o comainer
+```bash
+# Testes básicos
+docker-compose run --rm tests python -m pytest /app/tests/test_tasks.py -v
+
+# Com cobertura (opcional)
+docker-compose run --rm tests python -m pytest /app/tests/test_tasks.py -v --cov=/app/app --cov-report=term-missing
+```
+
 ## Documentação Interativa
 
 O FastAPI gera automaticamente uma documentação interativa da API. Após iniciar o servidor, você pode acessá-la nos seguintes endereços:
