@@ -1,3 +1,6 @@
+import uvicorn
+
+
 from fastapi import FastAPI
 from .database import engine
 from . import models
@@ -13,3 +16,6 @@ app.include_router(todos.router)
 @app.get("/")
 def health_check():
     return {"status": "online"}
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

@@ -26,6 +26,8 @@ services:
     container_name: fastapi_api
     restart: always
     network_mode: "host"
+    ports:
+      - "8000:8000"
     volumes:
       - ./app:/app/app
     env_file:
