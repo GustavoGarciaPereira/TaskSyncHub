@@ -1,15 +1,14 @@
 version: '3.8'
 
 services:
-  # Serviço do Banco de Dados PostgreSQL
   db:
     image: postgres:16
     container_name: postgres_db
     restart: always
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -20,23 +19,25 @@ services:
       timeout: 5s
       retries: 5
 
-  # Serviço da API FastAPI
   api:
     build: .
     container_name: fastapi_api
     restart: always
-    network_mode: "host"
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app/app
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
 
   tests:
     build: .
     container_name: fastapi_tests
-    network_mode: "host"
     volumes:
       - ./app:/app/app
       - ./tests:/app/tests
@@ -45,8 +46,11 @@ services:
     command: >
       sh -c "python -m pytest /app/tests -v"
     environment:
-      - PYTHONPATH=/app
-      - TESTING=1
+      PYTHONPATH: /app
+      TESTING: 1
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pg_data:
